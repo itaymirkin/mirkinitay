@@ -2,24 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const fs = require('fs');
-
-
-
-
-
-// var writeStream = fs.createWriteStream("accounts.xls");
-//
-// var header="Sl No"+"\t"+" username"+"\t"+"password"+"\n";
-//  var row1 = "0"+"\t"+ i.usernamerR + "\t" + i.passwordR+"\n";
-// // var row2 = "1"+"\t"+" 22"+"\t"+"bob"+"\n";
-//
-// writeStream.write(header);
-// // writeStream.write(row1);
-// // writeStream.write(row2);
-//
-// writeStream.close();
-
-
+const xlsx = require('xlsx')
 
 
 
@@ -40,42 +23,52 @@ app.get('/', (req, res) => {
 })
 
 
-
-
-
-
 app.post('/register', (req,res) => {
-     i=req.body
-     console.log(i);
-     fs.appendFile('accounts.xls',"\n"+"0"+"\t"+ i.usernamerR + "\t" + i.passwordR , function (err) {
-       if (err) throw err;
-       console.log('Saved!');
-     });
-
-
-
+         i=req.body
+         console.log(i);
+         fs.appendFile('accounts.xlsx',"\n"+"0"+"\t"+ i.usernamerR + i.passwordR , function (err) {
+           if (err) throw err;
+           console.log('Saved!');
+         });
    })
 
 
-
-
-
-
-
-
-
-app.post('/login', (req, res) => {
+app.post('/login', (req, res, next) => {
   loginDetails = req.body
-  welcomeMessage = 'welcome ' + loginDetails.username
-  console.log(loginDetails.username + ' connected');
+
+
+        var workbook = xlsx.readFile('accounts.xlsx');
+        var sheet_name_list = workbook.SheetNames;
+        var xlData =JSON.stringify((workbook.Sheets[sheet_name_list[0]]));
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var range = xlsx.utils.decode_range(sheet['!ref']);
+        console.log((xlData));
+
+
+
+// eD= [JSON.stringify(uEnter)],
+// pD= [JSON.stringify(pEnter)],
+// console.log(eD+pD);
+let uEnter =  loginDetails.username
+let pEnter = loginDetails.password
+
+loginCheck =xlData.includes(uEnter+pEnter)
+// console.log(xlData.includes(pD))
+// checkU= xlData.includes(eD)
+// checkP= xlData.includes(pD)
+
+
+if(loginCheck == true){
+  console.log('login seccesful')
+  welcomeMessage = 'welcome ' + uEnter
+  console.log(uEnter + ' connected');
   res.send(welcomeMessage)
-  fs.readFile('accounts.xls')
+} else  {
+  console.log('try again')
+  res.send('loggin failed ')
+        }
 
 })
-
-
-
-
 
 
 app.listen(3000, () => {
